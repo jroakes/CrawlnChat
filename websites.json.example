@@ -1,0 +1,24 @@
+{
+  "websites": [
+    {
+      "name": "Python Documentation",
+      "xml_sitemap": "https://docs.python.org/3/sitemap.xml",
+      "description": "Official Python programming language documentation",
+      "freshness_days": 30,
+      "exclude_patterns": [
+        "https://docs.python.org/3/archives/.*",
+        "https://docs.python.org/3/download.html"
+      ],
+      "include_only_patterns": [
+        "https://docs.python.org/3/tutorial/.*",
+        "https://docs.python.org/3/library/.*"
+      ]
+    },
+    {
+      "name": "FastAPI Documentation",
+      "xml_sitemap": "https://fastapi.tiangolo.com/sitemap.xml",
+      "description": "Modern, fast (high-performance) web framework for building APIs",
+      "freshness_days": 14
+    }
+  ]
+} 

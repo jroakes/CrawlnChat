@@ -1,0 +1,48 @@
+# Environment and config
+.env
+venv/
+env/
+*.env
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.python-version
+.vscode/
+.idea/
+
+# Build and dist
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Logs
+logs/
+*.log
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Project specific
+.DS_Store
+*.bak
+_old/
+.cursorrules
+.cursorignore
+.cursor
+.venv/
+websites.json
