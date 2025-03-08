@@ -4,25 +4,34 @@ MCP (Model Context Protocol) interface for Crawl n Chat.
 
 from typing import Dict, List, Optional, Any
 from mcp.server.fastmcp import FastMCP
-
-from core.settings import (
+from src.core.settings import (
     MCP_PORT,
     API_TITLE,
     API_DESCRIPTION,
     API_VERSION,
     DEFAULT_EMBEDDING_MODEL,
 )
-from core.router import AgentRouter
-from core import get_logger, initialize_services
+from src.core.router import AgentRouter
+from src.core import get_logger
+from src.core.logger import configure_logging
 
 
 logger = get_logger("mcp_app")
+
+
+class RuntimeError(Exception):
+    """
+    Custom exception for MCP server runtime errors.
+    """
+    pass
+
 
 # Global service instances
 agent_router: Optional[AgentRouter] = None
 
 # Create MCP server - explicitly set port
 logger.info(f"Initializing MCP server with port {MCP_PORT}")
+
 mcp = FastMCP(
     name=API_TITLE, description=API_DESCRIPTION, version=API_VERSION, port=MCP_PORT
 )
@@ -61,7 +70,6 @@ def run_mcp_server(
 
     Args:
         init_agent_router: Pre-initialized agent router instance.
-        init_vector_store: Pre-initialized vector store instance.
     """
     global agent_router
 
@@ -78,7 +86,13 @@ def run_mcp_server(
         )
 
     try:
-        mcp.run(transport="sse")
+        # Set minimal logging when running MCP to prevent interference with JSON-RPC
+        # Log messages are still written to the log file at the usual level
+        configure_logging("CRITICAL")
+        
+        # Run the MCP server with stdio transport
+        mcp.run(transport="stdio")
+
 
     except Exception as e:
         logger.error(f"MCP server failed to start or crashed: {e}")

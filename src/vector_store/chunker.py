@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 from dataclasses import dataclass
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from core.logger import get_logger
+from src.core.logger import get_logger
 
 logger = get_logger("chunker")
 

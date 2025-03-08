@@ -10,8 +10,8 @@ from lxml import etree
 from tenacity import retry, stop_after_attempt, wait_exponential
 import brotli
 
-from core.settings import USER_AGENT
-from core.logger import get_logger
+from src.core.settings import USER_AGENT
+from src.core.logger import get_logger
 
 logger = get_logger("sitemap")
 

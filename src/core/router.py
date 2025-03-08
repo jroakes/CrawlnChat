@@ -7,15 +7,15 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END, START
 from langgraph.prebuilt import ToolNode
-from core.settings import (
+from src.core.settings import (
     DEFAULT_LLM_MODEL,
     DEFAULT_EMBEDDING_MODEL,
     DEFAULT_ANSWER,
     load_website_configs,
 )
-from vector_store.pinecone import PineconeWebsiteVectorStore
-from core.logger import get_logger
-from core.agents import AgentLogic, AgentState
+from src.vector_store.pinecone import PineconeWebsiteVectorStore
+from src.core.logger import get_logger
+from src.core.agents import AgentLogic, AgentState
 
 logger = get_logger("agent_router")
 

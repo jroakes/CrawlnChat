@@ -16,9 +16,9 @@ from langchain_core.prompts import (
 )
 from langchain_core.tools import tool
 from langchain_core.language_models import BaseLanguageModel
-from core.logger import get_logger
-from core.brand_review import BrandReviewer
-from core.settings import DEFAULT_ANSWER, NUM_RAG_SOURCES
+from src.core.logger import get_logger
+from src.core.brand_review import BrandReviewer
+from src.core.settings import DEFAULT_ANSWER, NUM_RAG_SOURCES
 from pydantic import BaseModel, Field
 
 logger = get_logger("agent_logic")

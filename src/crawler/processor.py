@@ -4,12 +4,12 @@ Website crawling and processing module for Crawl n Chat.
 
 from typing import Dict, Any
 
-from crawler.sitemap import SitemapParser
-from crawler.fetcher import AsyncContentFetcher
-from vector_store.chunker import TextChunker
-from vector_store.pinecone import PineconeWebsiteVectorStore
-from core.settings import DEFAULT_EMBEDDING_MODEL, CrawlnChatConfig
-from core.logger import get_logger
+from src.crawler.sitemap import SitemapParser
+from src.crawler.fetcher import AsyncContentFetcher
+from src.vector_store.chunker import TextChunker
+from src.vector_store.pinecone import PineconeWebsiteVectorStore
+from src.core.settings import DEFAULT_EMBEDDING_MODEL, CrawlnChatConfig
+from src.core.logger import get_logger
 
 logger = get_logger("crawler_processor")
 
@@ -118,7 +118,9 @@ async def crawl_website(
                 "reason": "no_chunks_created",
             }
 
-        # Store chunks in vector database using sync method instead of async
+        # Note: This is a synchronous operation within an async context.
+        # It's acceptable since vector store operations aren't the main bottleneck
+        # compared to the network-bound operations for fetching content.
         logger.info(
             f"Storing {len(all_chunks)} chunks for {website_config.name} in namespace '{namespace}'"
         )
@@ -177,24 +179,25 @@ async def process_websites(config_file: str, recrawl: bool = False) -> None:
             result = await crawl_website(website, vector_store, recrawl)
             results.append(result)
 
-        # Print summary
-        print("\nCrawl Summary:")
-        print("=" * 80)
+        # Log crawl summary using debug level
+        logger.debug("Crawl Summary:")
+        logger.debug("-" * 50)
         for result in results:
             status = result["status"]
             namespace = result["namespace"]
 
             if status == "success":
-                print(
+                logger.debug(
                     f"✅ {namespace}: {result['pages_crawled']} pages, {result['chunks_stored']} chunks"
                 )
             elif status == "skipped":
-                print(f"⏭️  {namespace}: Skipped ({result['reason']})")
+                logger.debug(f"⏭️  {namespace}: Skipped ({result['reason']})")
             else:
-                print(f"❌ {namespace}: Failed ({result['reason']})")
+                logger.debug(f"❌ {namespace}: Failed ({result['reason']})")
+        logger.debug("-" * 50)
 
-        print("=" * 80)
+        return results
 
     except Exception as e:
         logger.error(f"Error processing websites: {e}")
-        print(f"Error: {str(e)}")
+        raise

@@ -3,13 +3,13 @@ Core functionality for Crawl n Chat.
 """
 
 from typing import Tuple
-from core.router import AgentRouter
-from vector_store.pinecone import PineconeWebsiteVectorStore
-from core.logger import get_logger
+from src.core.router import AgentRouter
+from src.vector_store.pinecone import PineconeWebsiteVectorStore
+from src.core.logger import get_logger
 
 logger = get_logger("core")
 
-from core.settings import (
+from src.core.settings import (
     DEFAULT_LLM_MODEL,
     DEFAULT_EMBEDDING_MODEL,
     DEFAULT_ANSWER,

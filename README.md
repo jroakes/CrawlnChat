@@ -53,8 +53,8 @@ A modular web crawling and chat system that allows for ingesting website content
 
 ```bash
 # Clone the repository
-git clone https://github.com/jroakes/crawl-n-chat.git
-cd crawl-n-chat
+git clone https://github.com/jroakes/CrawlnChat.git
+cd CrawlnChat
 
 # Create a virtual environment
 python -m venv .venv
@@ -161,7 +161,7 @@ HOST=0.0.0.0
 ### Start the Service
 
 ```bash
-# Start the full service (both frontends)
+# Start the full service (fastapi is default)
 python -m src.main --config websites.json
 
 # Start with specific frontend
@@ -183,8 +183,6 @@ The CLI interface allows for quick testing and interaction with the service:
 # Query the system via CLI
 python -m src.cli "What is the pricing model for the Basic plan?"
 
-# Specify domain routing to target a specific website
-python -m src.cli --namespace sales "What are the enterprise pricing options?"
 
 # Get detailed debug information
 python -m src.cli --debug "How do I reset my password?"
@@ -204,8 +202,7 @@ The FastAPI server provides a comprehensive REST API with Swagger UI documentati
     "namespace": "optional-specific-website-namespace"
   }
   ```
-- **Websites Info**: `GET /api/websites`
-- **Health Check**: `GET /api/health`
+
 
 #### MCP (Model Context Protocol) Interface
 
@@ -401,47 +398,7 @@ Common troubleshooting steps:
 3. Test connectivity to Pinecone using the health check API
 4. Ensure your website configuration is valid JSON or YAML
 
-## Advanced Configuration
 
-### Custom Chunking Strategies
-
-You can customize the chunking strategy in your environment variables:
-
-```
-# Chunking Configuration
-CHUNK_SIZE=800
-CHUNK_OVERLAP=150
-CHUNK_TYPE=recursive  # Options: simple, recursive, semantic
-```
-
-### Multiple Embedding Models
-
-The system supports configuring different embedding models:
-
-```
-# Default embedding model
-DEFAULT_EMBEDDING_MODEL=text-embedding-3-small
-
-# Alternate models (for specific websites)
-ADVANCED_EMBEDDING_MODEL=text-embedding-3-large
-```
-
-### Custom Rate Limiting
-
-Configure per-domain rate limiting in your website configuration:
-
-```json
-{
-  "websites": [
-    {
-      "name": "Example Docs",
-      "xml_sitemap": "https://example.com/sitemap.xml",
-      "rate_limit": 10,  // Requests per second for this site
-      "...": "..."
-    }
-  ]
-}
-```
 
 ## Roadmap
 
@@ -462,8 +419,129 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 [MIT License](LICENSE)
 
+## Integrating with Claude Desktop
 
+CrawlnChat can be used as a Model Context Protocol (MCP) server with [Claude Desktop](https://claude.ai/download).
 
+### Prerequisites
 
+1. Install [Claude Desktop](https://claude.ai/download) on your Mac
+2. Make sure it's updated to the latest version
+3. Ensure you have already crawled some websites using CrawlnChat
 
+### Important: Transport Configuration
 
+Before integrating with Claude Desktop, you need to modify the transport type in `src/api/mcp_app.py`:
+
+The current implementation uses the "sse" transport:
+```python
+# Change this line in src/api/mcp_app.py (around line 81)
+mcp.run(transport="sse")
+```
+
+For Claude Desktop integration, you must change it to "stdio":
+```python
+# Modified version
+mcp.run(transport="stdio")
+```
+
+Claude Desktop requires the "stdio" transport for subprocess communication, while the "sse" transport is designed for HTTP-based connections.
+
+**Example Patch Files:**
+
+For your convenience, we've included example patch files that demonstrate how to make the necessary changes:
+
+1. `claude_desktop_patch.py` - Simple patch showing how to change SSE to stdio transport
+2. `dual_transport_patch.py` - Advanced patch demonstrating how to support both transport types via command-line arguments
+
+These files are provided as references and should not be executed directly. Instead, use them as guides to modify your actual source code.
+
+### Configuration
+
+1. Edit your Claude Desktop configuration file:
+
+```bash
+# Open the config file with your preferred text editor
+nano ~/Library/Application\ Support/Claude/claude_desktop_config.json
+```
+
+2. Add CrawlnChat to the `mcpServers` section:
+
+```json
+{
+    "mcpServers": {
+        "crawlnchat": {
+            "command": "/path/to/your/uv",
+            "args": [
+                "run",
+                "--directory",
+                "/path/to/your/CrawlnChat",
+                "-m",
+                "src.main",
+                "--config",
+                "/path/to/your/CrawlnChat/websites.json",
+                "--frontend",
+                "mcp"
+            ],
+            "env": {
+                "PYTHONPATH": "/path/to/your/CrawlnChat"
+            }
+        }
+    }
+}
+```
+
+Replace:
+- `/path/to/your/uv` with the path to your uv executable
+- `/path/to/your/CrawlnChat` with the absolute path to your CrawlnChat installation
+
+Alternatively, you can use Python directly:
+
+```json
+{
+    "mcpServers": {
+        "crawlnchat": {
+            "command": "python",
+            "args": [
+                "-m",
+                "src.main",
+                "--config",
+                "websites.json",
+                "--frontend",
+                "mcp"
+            ],
+            "cwd": "/path/to/your/CrawlnChat"
+        }
+    }
+}
+```
+
+3. Save the file and restart Claude Desktop
+
+### Usage
+
+Once configured:
+
+1. Open Claude Desktop
+2. Look for the hammer icon in the interface, which indicates available tools
+3. Start asking questions about your crawled content using natural language
+4. Claude will automatically use the `chat_with_content` tool when appropriate
+
+Example queries you can try:
+- "What information do you have about [topic in your crawled content]?"
+- "Summarize the key points from the website [one of your crawled sites]"
+- "Find information related to [specific topic] from the crawled websites"
+
+### Troubleshooting
+
+If your server isn't showing up in Claude Desktop:
+
+1. Check the logs at `~/Library/Logs/Claude/mcp*.log`
+2. Verify your configuration file syntax
+3. Make sure the path to your project is absolute and correct
+4. Ensure that your config file exists and is valid
+5. Try running the server manually first to check for errors:
+   ```bash
+   python -m src.main --config path/to/your/config.json --frontend mcp
+   ```
+6. Restart Claude Desktop completely

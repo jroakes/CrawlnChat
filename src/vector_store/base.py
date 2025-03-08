@@ -8,8 +8,8 @@ providing a common interface for document storage, retrieval, and management.
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Any, Union, Type, TypeVar
 
-from vector_store.chunker import TextChunk
-from core.logger import get_logger
+from src.vector_store.chunker import TextChunk
+from src.core.logger import get_logger
 
 logger = get_logger("vector_store")
 

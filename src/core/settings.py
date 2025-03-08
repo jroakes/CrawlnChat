@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field, HttpUrl
 from dotenv import load_dotenv
 import json
 import yaml
-from core.logger import get_logger
+from src.core.logger import get_logger
 
 # Set up logger
 logger = get_logger("config_settings")
@@ -24,7 +24,7 @@ logger = get_logger("config_settings")
 # Load environment variables
 load_dotenv()
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 
 # About
@@ -82,6 +82,20 @@ DEFAULT_CONFIG_PATHS: List[str] = [
 DEFAULT_ANSWER: str = "I'm sorry, I couldn't find a good answer to your question."
 BRAND_GUIDELINES_FILE: Optional[str] = os.getenv("BRAND_GUIDELINES_FILE")
 NUM_RAG_SOURCES: int = int(os.getenv("NUM_RAG_SOURCES", "5"))
+
+
+# Validate API keys
+required_keys = [
+    "OPENAI_API_KEY",
+    "ANTHROPIC_API_KEY",
+    "PINECONE_API_KEY",
+]
+
+for key in required_keys:
+    if not os.getenv(key):
+        logger.error(f"Missing required environment variable: {key}")
+        raise ValueError(f"Missing required environment variable: {key}")
+
 
 
 class WebsiteConfig(BaseModel):

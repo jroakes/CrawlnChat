@@ -46,3 +46,4 @@ _old/
 .cursor
 .venv/
 websites.json
+uv.lock

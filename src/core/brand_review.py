@@ -6,8 +6,8 @@ from typing import Dict, Optional
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage
 
-from core.settings import DEFAULT_ANSWER, BRAND_GUIDELINES_FILE
-from core.logger import get_logger
+from src.core.settings import DEFAULT_ANSWER, BRAND_GUIDELINES_FILE
+from src.core.logger import get_logger
 
 logger = get_logger("brand_review")
 

@@ -10,15 +10,15 @@ from langchain_pinecone import PineconeVectorStore
 from langchain_core.documents import Document
 from pinecone import Pinecone, ServerlessSpec
 
-from core.settings import (
+from src.core.settings import (
     PINECONE_API_KEY,
     PINECONE_INDEX_NAME,
     PINECONE_CLOUD,
     PINECONE_REGION,
 )
-from vector_store.chunker import TextChunk
-from vector_store.base import VectorStore
-from core.logger import get_logger
+from src.vector_store.chunker import TextChunk
+from src.vector_store.base import VectorStore
+from src.core.logger import get_logger
 
 logger = get_logger("pinecone_vector_store")
 
@@ -51,6 +51,7 @@ class PineconeWebsiteVectorStore(VectorStore):
             )
 
         self.embedding_model = embedding_model
+        self.embedding_dimension = None
         self.api_key = api_key
         self.cloud = cloud
         self.region = region
@@ -58,6 +59,8 @@ class PineconeWebsiteVectorStore(VectorStore):
 
         # Initialize OpenAI embeddings
         self.embeddings = OpenAIEmbeddings(model=embedding_model)
+        self.embedding_dimension = len(self.embeddings.embed_query('the'))
+
 
         logger.info(f"Initializing Pinecone with index name: {self.index_name}")
 
@@ -99,7 +102,7 @@ class PineconeWebsiteVectorStore(VectorStore):
         """
         try:
             # OpenAI embedding dimension is 1536 for text-embedding-ada-002
-            dimension = 1536
+            dimension = self.embedding_dimension
 
             logger.info(
                 f"Creating Pinecone index: {self.index_name} with dimension {dimension}"

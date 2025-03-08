@@ -17,7 +17,7 @@ import uvicorn
 import time
 
 
-from core.settings import (
+from src.core.settings import (
     FASTAPI_PORT,
     SERVER_URL,
     API_TITLE,
@@ -25,8 +25,8 @@ from core.settings import (
     API_VERSION,
     DEFAULT_EMBEDDING_MODEL,
 )
-from core.router import AgentRouter
-from core import get_logger
+from src.core.router import AgentRouter
+from src.core import get_logger
 
 
 logger = get_logger("fastapi_app")

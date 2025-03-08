@@ -8,14 +8,14 @@ with support for rate limiting, content type filtering, and content conversion.
 import os
 import asyncio
 import time
-from typing import Dict, List, Tuple, Any, Optional
+from typing import Dict, List, Tuple, Any
 import aiohttp
 from tenacity import retry, stop_after_attempt, wait_exponential
 from tqdm import tqdm
 from markitdown import MarkItDown
 
-from core.settings import CRAWL_RATE_LIMIT, USER_AGENT
-from core.logger import get_logger
+from src.core.settings import CRAWL_RATE_LIMIT, USER_AGENT
+from src.core.logger import get_logger
 
 logger = get_logger("fetcher")
 

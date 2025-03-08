@@ -6,9 +6,9 @@ import argparse
 import asyncio
 from typing import Optional, List
 
-from core.router import AgentRouter
-from core.settings import DEFAULT_EMBEDDING_MODEL
-from core.logger import get_logger
+from src.core.router import AgentRouter
+from src.core.settings import DEFAULT_EMBEDDING_MODEL
+from src.core.logger import get_logger
 
 logger = get_logger("cli")
 
@@ -57,12 +57,6 @@ def main():
         "query",
         nargs="?",
         help="The question to ask (if not provided, will prompt for input)",
-    )
-
-    parser.add_argument(
-        "--namespaces",
-        nargs="+",
-        help="Specify one or more namespaces to search in, separated by spaces",
     )
 
     args = parser.parse_args()

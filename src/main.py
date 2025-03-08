@@ -13,11 +13,12 @@ import time  # Add time for sleep
 import os
 from typing import List
 
-from core.settings import FASTAPI_PORT, MCP_PORT, DEFAULT_EMBEDDING_MODEL
-from core.router import AgentRouter
-from crawler import process_websites
-from api import run_fastapi_server, run_mcp_server
-from core import get_logger, initialize_services
+from src.core.settings import FASTAPI_PORT, MCP_PORT, DEFAULT_EMBEDDING_MODEL
+from src.core.router import AgentRouter
+from src.crawler import process_websites
+from src.api import run_fastapi_server, run_mcp_server
+from src.core import get_logger
+from src.core.logger import configure_logging
 
 logger = get_logger("main")
 
@@ -31,11 +32,7 @@ def start_servers(frontends: List[str]) -> None:
 
     Args:
         frontends: List of frontend types to start. Valid values are "fastapi", "mcp", or "all".
-
-    Returns:
-        None
     """
-
     # Initialize shared services
     agent_router = AgentRouter(embedding_model=DEFAULT_EMBEDDING_MODEL)
 
@@ -45,7 +42,7 @@ def start_servers(frontends: List[str]) -> None:
         fastapi_thread = threading.Thread(
             target=run_fastapi_server,
             args=(agent_router,),
-            daemon=True,  # Make thread daemon so it doesn't block shutdown
+            daemon=True,
         )
         server_threads.append(fastapi_thread)
         fastapi_thread.start()
@@ -53,58 +50,54 @@ def start_servers(frontends: List[str]) -> None:
     # Start MCP server if requested
     if "mcp" in frontends or "all" in frontends:
         logger.info(f"Starting MCP server on port {MCP_PORT}")
-
         mcp_thread = threading.Thread(
             target=run_mcp_server,
             args=(agent_router,),
-            daemon=True,  # Make thread daemon so it doesn't block shutdown
+            daemon=True,
         )
         mcp_thread.start()
         server_threads.append(mcp_thread)
 
-    # Log that servers are started
     logger.info(f"Started {len(server_threads)} server(s)")
 
 
 def main() -> None:
-    """
-    Main entry point for the application.
-
-    Handles command-line argument parsing and coordinates the startup sequence:
-    1. Process websites according to configuration
-    2. Start requested frontend servers (unless crawl-only mode is specified)
-
-    Returns:
-        None
-    """
+    """Main entry point for the application."""
     parser = argparse.ArgumentParser(description="Crawl n Chat")
-
     parser.add_argument(
         "--config",
         required=True,
         help="Path to the configuration file (JSON or YAML)",
     )
-
     parser.add_argument(
         "--recrawl",
         action="store_true",
         help="Recrawl websites even if they already exist in the vector database",
     )
-
     parser.add_argument(
         "--frontend",
         choices=["fastapi", "mcp", "all"],
         default="all",
         help="Frontend to run (default: all)",
     )
-
     parser.add_argument(
         "--crawl-only",
         action="store_true",
         help="Only crawl websites, don't start the servers",
     )
+    parser.add_argument(
+        "--debug",
+        action="store_true", 
+        help="Enable debug logging (default: error level logging)"
+    )
 
     args = parser.parse_args()
+
+    # Configure logging based on debug flag
+    configure_logging("DEBUG" if args.debug else "ERROR")
+    
+    if args.debug:
+        logger.debug("Debug logging enabled")
 
     # Process websites
     asyncio.run(process_websites(args.config, args.recrawl))
@@ -114,7 +107,7 @@ def main() -> None:
         frontends = [args.frontend]
         if args.frontend == "all":
             frontends = ["fastapi", "mcp"]
-
+            
         start_servers(frontends)
 
         # Keep main thread running to avoid shutting down too early
