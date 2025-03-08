@@ -4,11 +4,13 @@ Pinecone vector store implementation for Crawl n Chat using LangChain integratio
 
 from typing import Dict, List, Optional, Any
 import time
+import uuid
 
 from langchain_openai import OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
 from langchain_core.documents import Document
 from pinecone import Pinecone, ServerlessSpec
+from tqdm import tqdm
 
 from src.core.settings import (
     PINECONE_API_KEY,
@@ -143,10 +145,14 @@ class PineconeWebsiteVectorStore(VectorStore):
                 langchain_docs.append(
                     Document(page_content=doc.text, metadata=doc.metadata)
                 )
+            
+            # Log start of embedding process - this is the time-consuming step
+            if langchain_docs:
+                logger.info(f"Generating embeddings for {len(langchain_docs)} documents - this may take some time...")
 
             # Add documents to Pinecone using batched processing
             batch_size = 100
-            for i in range(0, len(langchain_docs), batch_size):
+            for i in tqdm(range(0, len(langchain_docs), batch_size), desc="Uploading document batches"):
                 batch = langchain_docs[i : i + batch_size]
 
                 # Use LangChain to add documents

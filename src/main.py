@@ -36,10 +36,11 @@ def start_servers(frontend: str) -> None:
     """
     # Initialize shared services
     agent_router = AgentRouter(embedding_model=DEFAULT_EMBEDDING_MODEL)
+    logger.info(f"Initialized AgentRouter with embedding model: {DEFAULT_EMBEDDING_MODEL}")
 
     # Start FastAPI server if requested
     if frontend == "fastapi":
-        logger.info(f"Starting FastAPI server on port {FASTAPI_PORT}")
+        logger.info(f"⚡ Initializing FastAPI server on port {FASTAPI_PORT}")
         fastapi_thread = threading.Thread(
             target=run_fastapi_server,
             args=(agent_router,),
@@ -50,7 +51,7 @@ def start_servers(frontend: str) -> None:
 
     # Start MCP server if requested
     elif frontend == "mcp":
-        logger.info(f"Starting MCP server on port {MCP_PORT}")
+        logger.info(f"⚡ Initializing MCP server on port {MCP_PORT}")
         mcp_thread = threading.Thread(
             target=run_mcp_server,
             args=(agent_router,),
@@ -62,7 +63,9 @@ def start_servers(frontend: str) -> None:
         logger.error(f"Unknown frontend type: {frontend}")
         sys.exit(1)
 
-    logger.info(f"Started {len(server_threads)} server(s)")
+    # Let the server initialization complete
+    time.sleep(1)
+    logger.info(f"✅ Server initialization complete - {frontend} ready to handle requests")
 
 
 def main() -> None:
@@ -97,17 +100,24 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    # Configure logging based on debug flag
-    configure_logging("DEBUG" if args.debug else "ERROR")
+    # Configure logging based on debug flag and frontend
+    if args.frontend == "mcp":
+        # For MCP, minimize logging as it uses stdout for communication
+        configure_logging("ERROR")  # Only show errors
+        logger.info("Configured minimal logging for MCP (stdout used for communication)")
+    else:
+        # For FastAPI, use the debug flag
+        log_level = "DEBUG" if args.debug else "INFO"  # Default to INFO instead of ERROR
+        configure_logging(log_level)
+        if args.debug:
+            logger.debug("Debug logging enabled")
     
-    if args.debug:
-        logger.debug("Debug logging enabled")
-
     # Process websites
     asyncio.run(process_websites(args.config, args.recrawl))
-
+    
     # Start servers unless --crawl-only is specified
     if not args.crawl_only:
+        logger.info(f"Starting {args.frontend} server...")
         start_servers(args.frontend)
 
         # Keep main thread running to avoid shutting down too early

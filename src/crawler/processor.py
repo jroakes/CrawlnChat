@@ -196,6 +196,9 @@ async def process_websites(config_file: str, recrawl: bool = False) -> None:
                 logger.debug(f"❌ {namespace}: Failed ({result['reason']})")
         logger.debug("-" * 50)
 
+        # Add a clear completion message that's always visible
+        logger.info("✅ Website crawling process completed successfully")
+
         return results
 
     except Exception as e:

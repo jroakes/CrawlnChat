@@ -165,6 +165,8 @@ def run_fastapi_server(
 
     # Run with uvicorn directly instead of using Server class
     logger.info(f"Starting FastAPI server on port {FASTAPI_PORT}")
+    logger.info(f"✅ FastAPI server is ready - API available at http://localhost:{FASTAPI_PORT}")
+    logger.info(f"📝 API documentation available at http://localhost:{FASTAPI_PORT}/docs")
     uvicorn.run(
         app, host="0.0.0.0", port=FASTAPI_PORT, log_config=None, log_level="info"
     )

@@ -4,11 +4,12 @@ XML Sitemap parsing module for Crawl n Chat.
 
 import re
 import traceback
-from typing import List, Optional, Set, Tuple
+from typing import List, Optional, Set, Tuple, Union
 import httpx
 from lxml import etree
 from tenacity import retry, stop_after_attempt, wait_exponential
 import brotli
+from pydantic import HttpUrl
 
 from src.core.settings import USER_AGENT
 from src.core.logger import get_logger
@@ -45,20 +46,23 @@ class SitemapParser:
         self.client.close()
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
-    def _fetch_sitemap(self, url: str) -> bytes:
+    def _fetch_sitemap(self, url: Union[str, HttpUrl, 'httpx.URL']) -> bytes:
         """
         Fetch a sitemap from a URL.
 
         Args:
-            url: The URL of the sitemap.
+            url: The URL of the sitemap. Can be a string, httpx.URL or pydantic.HttpUrl.
 
         Returns:
             The raw XML content of the sitemap.
         """
-        logger.debug(f"Fetching sitemap from {url}")
+        # Convert pydantic.HttpUrl to string if needed
+        url_str = str(url)
+        
+        logger.debug(f"Fetching sitemap from {url_str}")
 
         try:
-            response = self.client.get(url)
+            response = self.client.get(url_str)
             response.raise_for_status()
 
             # Log response headers for debugging
@@ -73,15 +77,9 @@ class SitemapParser:
                 try:
                     content = brotli.decompress(content)
                 except brotli.error as e:
-                    logger.error(f"Failed to decompress Brotli content: {e}")
+                    logger.info(f"Failed to decompress Brotli content: {e} (continuing with raw content)")
                     # Continue with raw content - the XML parser may still be able to handle it
                     # In some cases, Cloudflare might say it's Brotli but actually send readable content
-                    logger.debug("Attempting to continue with raw content")
-
-                except Exception as e:
-                    logger.error(f"Error decompressing Brotli content: {e}")
-                    logger.debug(f"Exception details: {traceback.format_exc()}")
-                    raise
 
             logger.debug(f"Sitemap content length: {len(content)} bytes")
             # Log a small sample of the content to debug format issues
@@ -97,7 +95,7 @@ class SitemapParser:
 
         except httpx.HTTPStatusError as e:
             logger.error(
-                f"HTTP status error fetching sitemap {url}: {e.response.status_code} - {e}"
+                f"HTTP status error fetching sitemap {url_str}: {e.response.status_code} - {e}"
             )
             if e.response.status_code == 403:
                 logger.error("Access forbidden - site may be blocking crawlers")
@@ -111,7 +109,7 @@ class SitemapParser:
 
             raise
         except Exception as e:
-            logger.error(f"Error fetching sitemap {url}: {e}")
+            logger.error(f"Error fetching sitemap {url_str}: {e}")
             logger.debug(f"Exception details: {traceback.format_exc()}")
             raise
 
@@ -180,7 +178,7 @@ class SitemapParser:
 
     def process_sitemap(
         self,
-        sitemap_url: str,
+        sitemap_url: Union[str, HttpUrl, 'httpx.URL'],
         exclude_patterns: Optional[List[str]] = None,
         include_only_patterns: Optional[List[str]] = None,
     ) -> Set[str]:
@@ -188,7 +186,7 @@ class SitemapParser:
         Process a sitemap URL and extract all page URLs.
 
         Args:
-            sitemap_url: The URL of the sitemap.
+            sitemap_url: The URL of the sitemap. Can be string, HttpUrl or httpx.URL.
             exclude_patterns: List of regex patterns for URLs to exclude.
             include_only_patterns: List of regex patterns for URLs to include.
 
@@ -204,7 +202,10 @@ class SitemapParser:
 
         all_page_urls = set()
         processed_sitemaps = set()
-        pending_sitemaps = {sitemap_url}
+        
+        # Convert sitemap_url to string for consistent handling
+        sitemap_url_str = str(sitemap_url)
+        pending_sitemaps = {sitemap_url_str}
 
         while pending_sitemaps:
             current_sitemap = pending_sitemaps.pop()
@@ -240,5 +241,5 @@ class SitemapParser:
             except Exception as e:
                 logger.error(f"Error processing sitemap {current_sitemap}: {e}")
 
-        logger.info(f"Found {len(all_page_urls)} pages in sitemap {sitemap_url}")
+        logger.info(f"Found {len(all_page_urls)} pages in sitemap {sitemap_url_str}")
         return all_page_urls
