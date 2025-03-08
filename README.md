@@ -161,10 +161,10 @@ HOST=0.0.0.0
 ### Start the Service
 
 ```bash
-# Start the full service (fastapi is default)
+# Start the service with FastAPI frontend (default)
 python -m src.main --config websites.json
 
-# Start with specific frontend
+# Start with specific frontend (only one can be run at a time)
 python -m src.main --config websites.json --frontend fastapi
 python -m src.main --config websites.json --frontend mcp
 
@@ -198,8 +198,7 @@ The FastAPI server provides a comprehensive REST API with Swagger UI documentati
 - **Chat Endpoint**: `POST /api/chat`
   ```json
   {
-    "message": "What are the main features of your product?",
-    "namespace": "optional-specific-website-namespace"
+    "message": "What are the main features of your product?"
   }
   ```
 
@@ -309,18 +308,13 @@ Ensures responses comply with your brand guidelines:
 from src.core.brand_review import BrandReviewer
 
 # Initialize with your brand guidelines
-reviewer = BrandReviewer(guidelines_file="brand_guidelines.md")
+reviewer = BrandReviewer(llm=openai_llm)
 
 # Review a draft response
-result = reviewer.review(
-    draft_response="The product costs $99 per month.",
-    context="Pricing information request"
-)
+revised_response = reviewer.review("The product costs $99 per month.")
 
-# Get the revised response
-final_response = result["revised_response"]
-print(f"Revised: {final_response}")
-print(f"Changes made: {result['modification_summary']}")
+# The review method returns the revised response as a string
+print(f"Revised: {revised_response}")
 ```
 
 ## Logging System
@@ -387,8 +381,8 @@ crawl-n-chat/
 The system implements robust error handling:
 
 - **Crawler errors**: Failed URLs are logged and reported but don't stop the overall process
-- **Database connection issues**: Automatic retries with exponential backoff
-- **Rate limiting**: Built-in protection against exceeding API rate limits
+- **Crawler retries**: Web requests use exponential backoff with automatic retries
+- **Rate limiting**: Built-in protection against exceeding web API rate limits for crawling
 - **Invalid queries**: Graceful handling with appropriate error messages
 
 Common troubleshooting steps:
@@ -397,8 +391,6 @@ Common troubleshooting steps:
 2. Verify your API keys in the `.env` file
 3. Test connectivity to Pinecone using the health check API
 4. Ensure your website configuration is valid JSON or YAML
-
-
 
 ## Roadmap
 
@@ -429,32 +421,16 @@ CrawlnChat can be used as a Model Context Protocol (MCP) server with [Claude Des
 2. Make sure it's updated to the latest version
 3. Ensure you have already crawled some websites using CrawlnChat
 
-### Important: Transport Configuration
+### Important Notes About MCP Transport
 
-Before integrating with Claude Desktop, you need to modify the transport type in `src/api/mcp_app.py`:
+The CrawlnChat MCP server already uses the "stdio" transport by default, which is compatible with Claude Desktop:
 
-The current implementation uses the "sse" transport:
 ```python
-# Change this line in src/api/mcp_app.py (around line 81)
-mcp.run(transport="sse")
-```
-
-For Claude Desktop integration, you must change it to "stdio":
-```python
-# Modified version
+# The MCP server uses stdio for communication (src/api/mcp_app.py)
 mcp.run(transport="stdio")
 ```
 
-Claude Desktop requires the "stdio" transport for subprocess communication, while the "sse" transport is designed for HTTP-based connections.
-
-**Example Patch Files:**
-
-For your convenience, we've included example patch files that demonstrate how to make the necessary changes:
-
-1. `claude_desktop_patch.py` - Simple patch showing how to change SSE to stdio transport
-2. `dual_transport_patch.py` - Advanced patch demonstrating how to support both transport types via command-line arguments
-
-These files are provided as references and should not be executed directly. Instead, use them as guides to modify your actual source code.
+Claude Desktop requires the "stdio" transport for subprocess communication, which is already configured correctly in the application.
 
 ### Configuration
 

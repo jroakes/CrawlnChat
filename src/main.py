@@ -8,7 +8,8 @@ and coordinating the startup of various services.
 import argparse
 import asyncio
 import threading
-import time  # Add time for sleep
+import time
+import sys
 
 import os
 from typing import List
@@ -26,18 +27,18 @@ logger = get_logger("main")
 server_threads = []
 
 
-def start_servers(frontends: List[str]) -> None:
+def start_servers(frontend: str) -> None:
     """
-    Start the specified frontend servers in separate threads.
+    Start the specified frontend server.
 
     Args:
-        frontends: List of frontend types to start. Valid values are "fastapi", "mcp", or "all".
+        frontend: Frontend type to start. Valid values are "fastapi" or "mcp".
     """
     # Initialize shared services
     agent_router = AgentRouter(embedding_model=DEFAULT_EMBEDDING_MODEL)
 
     # Start FastAPI server if requested
-    if "fastapi" in frontends or "all" in frontends:
+    if frontend == "fastapi":
         logger.info(f"Starting FastAPI server on port {FASTAPI_PORT}")
         fastapi_thread = threading.Thread(
             target=run_fastapi_server,
@@ -48,7 +49,7 @@ def start_servers(frontends: List[str]) -> None:
         fastapi_thread.start()
 
     # Start MCP server if requested
-    if "mcp" in frontends or "all" in frontends:
+    elif frontend == "mcp":
         logger.info(f"Starting MCP server on port {MCP_PORT}")
         mcp_thread = threading.Thread(
             target=run_mcp_server,
@@ -57,6 +58,9 @@ def start_servers(frontends: List[str]) -> None:
         )
         mcp_thread.start()
         server_threads.append(mcp_thread)
+    else:
+        logger.error(f"Unknown frontend type: {frontend}")
+        sys.exit(1)
 
     logger.info(f"Started {len(server_threads)} server(s)")
 
@@ -76,9 +80,9 @@ def main() -> None:
     )
     parser.add_argument(
         "--frontend",
-        choices=["fastapi", "mcp", "all"],
-        default="all",
-        help="Frontend to run (default: all)",
+        choices=["fastapi", "mcp"],
+        default="fastapi",
+        help="Frontend to run (default: fastapi)",
     )
     parser.add_argument(
         "--crawl-only",
@@ -104,11 +108,7 @@ def main() -> None:
 
     # Start servers unless --crawl-only is specified
     if not args.crawl_only:
-        frontends = [args.frontend]
-        if args.frontend == "all":
-            frontends = ["fastapi", "mcp"]
-            
-        start_servers(frontends)
+        start_servers(args.frontend)
 
         # Keep main thread running to avoid shutting down too early
         try:
