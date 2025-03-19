@@ -8,7 +8,7 @@ from typing import Optional, List
 
 from src.core.router import AgentRouter
 from src.core.settings import DEFAULT_EMBEDDING_MODEL
-from src.core.logger import get_logger
+from src.core.logger import get_logger, configure_logging
 
 logger = get_logger("cli")
 
@@ -58,8 +58,17 @@ def main():
         nargs="?",
         help="The question to ask (if not provided, will prompt for input)",
     )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable debug logging (default: error level logging)"
+    )
 
     args = parser.parse_args()
+
+    if args.debug:
+        configure_logging("DEBUG")
+        logger.debug("Debug logging enabled")
 
     # Get query from argument or prompt
     query = args.query
