@@ -11,7 +11,7 @@ from src.core.settings import (
     DEFAULT_LLM_MODEL,
     DEFAULT_EMBEDDING_MODEL,
     DEFAULT_ANSWER,
-    load_website_configs,
+    load_website_configs, DEFAULT_REVIEW_LLM_MODEL,
 )
 from src.vector_store.pinecone import PineconeWebsiteVectorStore
 from src.core.logger import get_logger
@@ -44,6 +44,7 @@ class AgentRouter:
         self,
         embedding_model: str = DEFAULT_EMBEDDING_MODEL,
         llm_model: str = DEFAULT_LLM_MODEL,
+        review_llm_model: str = DEFAULT_REVIEW_LLM_MODEL,
         config_file: Optional[str] = None,
     ):
         """
@@ -56,9 +57,11 @@ class AgentRouter:
         """
         self.vector_store = PineconeWebsiteVectorStore(embedding_model=embedding_model)
         self.llm_model = llm_model
+        self.review_llm_model = review_llm_model
         self.llm = self.create_llm(llm_model)
+        self.review_llm = self.create_llm(review_llm_model)
         self.websites = load_website_configs(config_file)
-        self.agent_logic = AgentLogic(self.llm, self.vector_store, self.websites)
+        self.agent_logic = AgentLogic(llm=self.llm, review_llm=self.review_llm, vector_store=self.vector_store, websites=self.websites)
         self.workflow = self._setup_agent_workflow()
 
     @staticmethod

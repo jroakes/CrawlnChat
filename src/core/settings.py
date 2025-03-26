@@ -58,7 +58,8 @@ DEFAULT_EMBEDDING_MODEL: str = os.getenv(
 VECTOR_DB_TYPE: Literal["pinecone"] = "pinecone"  # We only support Pinecone for now
 
 # LLM configuration
-DEFAULT_LLM_MODEL: str = os.getenv("DEFAULT_LLM_MODEL", "gpt-4")
+DEFAULT_LLM_MODEL: str = os.getenv("DEFAULT_LLM_MODEL", "gpt-4o")
+DEFAULT_REVIEW_LLM_MODEL: str = os.getenv("DEFAULT_REVIEW_LLM_MODEL", "gpt-4o-mini")
 DEFAULT_ANTHROPIC_MODEL: str = os.getenv(
     "DEFAULT_ANTHROPIC_MODEL", "claude-3-opus-20240229"
 )
