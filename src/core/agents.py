@@ -62,7 +62,7 @@ class AgentLogic:
     """
 
     def __init__(
-        self, llm: BaseLanguageModel, vector_store: Any, websites: List[Dict[str, str]]
+        self, llm: BaseLanguageModel, review_llm: BaseLanguageModel, vector_store: Any, websites: List[Dict[str, str]]
     ) -> None:
         """
         Initialize the agent logic.
@@ -73,9 +73,10 @@ class AgentLogic:
             websites: List of website configurations to process
         """
         self.llm = llm
+        self.review_llm = review_llm
         self.vector_store = vector_store
         self.websites = websites
-        self.brand_reviewer = BrandReviewer(self.llm)
+        self.brand_reviewer = BrandReviewer(self.review_llm)
         logger.info(f"Initializing AgentLogic with {len(websites)} websites")
         self.retrieval_tools = self._create_website_retrieval_tools()
         logger.info(f"Created {len(self.retrieval_tools)} retrieval tools")
