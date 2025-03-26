@@ -52,6 +52,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class RootResponse(BaseModel):
+    """
+    Response model for the root endpoint.
+
+    Attributes:
+        message: A welcome message for the API
+    """
+    message: str = "Welcome to Crawl n Chat API"
+
 
 class ChatRequest(BaseModel):
     """
@@ -83,7 +92,8 @@ class ChatResponse(BaseModel):
     )
 
 
-@app.get("/")
+
+@app.get("/", response_model=RootResponse)
 async def root() -> Dict[str, str]:
     """
     Root endpoint that provides a basic welcome message.
@@ -94,7 +104,9 @@ async def root() -> Dict[str, str]:
     return {"message": "Welcome to Crawl n Chat API"}
 
 
-@app.post("/chat", response_model=ChatResponse)
+@app.post("/chat", 
+          response_model=ChatResponse,
+          description="Process a chat request and generate a response based on website content. Returns AI-generated answer with source information.")
 async def chat(request: ChatRequest) -> ChatResponse:
     """
     Process a chat request and generate a response.
