@@ -41,21 +41,15 @@ class BrandReviewer:
             try:
                 with open(BRAND_GUIDELINES_FILE, "r") as f:
                     self.guidelines = f.read()
+            except FileNotFoundError:
+                logger.warning(f"Brand guidelines file not found: {BRAND_GUIDELINES_FILE}. Brand review will be disabled.")
+                self.guidelines = ""
             except Exception as e:
-                logger.error(f"Error loading brand guidelines file: {e}")
+                logger.error(f"Error loading brand guidelines file: {e}. Brand review will be disabled.")
                 self.guidelines = ""
         else:
-            self.guidelines = """
-            General brand guidelines:
-            - Be helpful, clear, and concise
-            - Maintain a professional but friendly tone
-            - Avoid excessive jargon
-            - Respect user privacy
-            - Don't make claims that cannot be substantiated
-            - Don't promise features or functionality not offered
-            - Always be accurate and truthful
-            """
-            logger.warning("No specific brand guidelines provided, using defaults")
+            logger.info("BRAND_GUIDELINES_FILE not set. Brand review will be disabled.")
+            self.guidelines = ""
 
     def review(self, response: str) -> str:
         """
@@ -72,6 +66,9 @@ class BrandReviewer:
             If the review process fails or the response cannot be made compliant,
             this method will return the default answer defined in settings.
         """
+        if not self.guidelines:
+            logger.info("Brand guidelines not loaded, skipping review.")
+            return response
         try:
             prompt = f"""
             # Brand Guidelines

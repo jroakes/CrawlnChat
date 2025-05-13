@@ -336,28 +336,28 @@ class AgentLogic:
         Returns:
             Updated agent state with reviewed answer
         """
-        logger.info("Reviewing answer for brand compliance")
+        logger.info("Processing brand compliance review.")
 
         if not state.get("answer"):
-            logger.warning("No answer to review")
+            logger.warning("No answer available to review.")
             state["final_answer"] = DEFAULT_ANSWER
             state["sources"] = []
             return state
 
         try:
             if self.brand_reviewer:
-                reviewed_answer = self.brand_reviewer.review(state["answer"])
-                if reviewed_answer:
-                    state["final_answer"] = reviewed_answer
-                    logger.info("Answer reviewed and updated for brand compliance")
+                original_answer = state["answer"]
+                reviewed_answer = self.brand_reviewer.review(original_answer)
+                state["final_answer"] = reviewed_answer
+
             else:
                 state["final_answer"] = state["answer"]
-                logger.info("No brand reviewer configured, using original answer")
+                logger.info("No brand reviewer configured. Using original answer.")
 
         except Exception as e:
-            logger.error(f"Error in review node: {e}")
+            logger.error(f"Error during review node processing: {e}")
             state["error"] = f"Error in review node: {str(e)}"
-            state["final_answer"] = state["answer"]  # Fall back to original answer
+            state["final_answer"] = state.get("answer", DEFAULT_ANSWER)
 
         return state
 

@@ -303,6 +303,8 @@ print(response["sources"])  # List of source URLs used
 
 Ensures responses comply with your brand guidelines:
 
+The `BrandReviewer` attempts to load guidelines from the file path specified in the `BRAND_GUIDELINES_FILE` environment variable during its initialization. If this variable is not set, the specified file is not found, or an error occurs during loading, the brand review step will be automatically skipped for any subsequent calls to its `review` method. In such cases, the `BrandReviewer` logs the reason for skipping, and the original, unreviewed response is returned.
+
 ```python
 # src/core/brand_review.py
 from src.core.brand_review import BrandReviewer
